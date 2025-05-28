@@ -6,7 +6,7 @@ For detailed documentation and usage information about each component, please re
 
 > ⚠️ NOTE: This project is still experimental and under active development. The code, features, and documentation are evolving rapidly. Please expect frequent updates and breaking changes. Contributions are welcome and we encourage you to watch for updates.
 
-<img src="/docs/source/media/nvrx_core_features.png" alt="Figure highlighting core NVRx features including automatic restart, hierarchical checkpointing, fault detection and health checks" width="950" height="350">
+<img src="https://github.com/anjalibshah/nvidia-resiliency-ext/blob/main/docs/source/media/nvrx_core_features.png" alt="Figure highlighting core NVRx features including automatic restart, hierarchical checkpointing, fault detection and health checks" width="950" height="350">
 
 
 ## Core Components and Capabilities
