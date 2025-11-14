@@ -73,6 +73,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../checkpointing/async/index.html">Async Checkpointing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../checkpointing/local/index.html">Local Checkpointing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../straggler_det/index.html">Straggler Detection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../shared_utils/index.html">Shared Utilities</a></li>
 </ul>
 
         </div>
@@ -136,9 +137,35 @@ main thread won’t enter into <code class="xref py py-meth docutils literal not
 code block if termination procedure is already in progress.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="nvidia_resiliency_ext.inprocess.CallWrapper.disable_hang_protection">
+<span class="sig-name descname"><span class="pre">disable_hang_protection</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/nvidia_resiliency_ext/inprocess/wrap.html#CallWrapper.disable_hang_protection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nvidia_resiliency_ext.inprocess.CallWrapper.disable_hang_protection" title="Link to this definition"></a></dt>
+<dd><p>A context manager that temporarily disables hang protection (soft and hard timeouts) in the monitor process.</p>
+<p>WARNING: This disables critical safety mechanisms that protect against hangs and deadlocks.
+Use with extreme caution and only for operations you know will complete.</p>
+<p>This is useful for operations that may take a long time to complete and should not
+be interrupted by hang detection mechanisms, such as some aspects of data loading.</p>
+<p>The hang protection is automatically re-enabled when exiting the context, even if an
+exception occurs within the context.</p>
+<p class="rubric">Example</p>
+<dl>
+<dt>def my_training_function(call_wrapper: CallWrapper):</dt><dd><p># Normal operations subject to hang protection
+train_step()</p>
+<p># Disable hang protection for long-running checkpoint operation
+with call_wrapper.disable_hang_protection():</p>
+<blockquote>
+<div><p>load_data()  # This won’t trigger hang detection</p>
+</div></blockquote>
+<p>train_step()   # This will trigger hang detection</p>
+<p># Hang protection is automatically re-enabled
+train_step()</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py property">
 <dt class="sig sig-object py" id="nvidia_resiliency_ext.inprocess.CallWrapper.iteration">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">iteration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><span class="pre">int</span></a></em><a class="headerlink" href="#nvidia_resiliency_ext.inprocess.CallWrapper.iteration" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">iteration</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.14)"><span class="pre">int</span></a></em><a class="headerlink" href="#nvidia_resiliency_ext.inprocess.CallWrapper.iteration" title="Link to this definition"></a></dt>
 <dd><p>Returns integer index of the current restart iteration.</p>
 </dd></dl>
 
@@ -166,7 +193,7 @@ be attempted.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="nvidia_resiliency_ext.inprocess.Wrapper">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nvidia_resiliency_ext.inprocess.</span></span><span class="sig-name descname"><span class="pre">Wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store_factory=&lt;class</span> <span class="pre">'nvidia_resiliency_ext.inprocess.store.TCPStore'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store_kwargs=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialize=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abort=&lt;nvidia_resiliency_ext.inprocess.abort.AbortTorchDistributed</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">finalize=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">health_check=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank_assignment=&lt;abc.DynamicCompose</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank_filter=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor_thread_interval=datetime.timedelta(seconds=1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor_process_interval=datetime.timedelta(seconds=1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heartbeat_interval=datetime.timedelta(seconds=1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_watchdog_interval=datetime.timedelta(seconds=1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soft_timeout=datetime.timedelta(seconds=60)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hard_timeout=datetime.timedelta(seconds=90)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heartbeat_timeout=datetime.timedelta(seconds=30)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">barrier_timeout=datetime.timedelta(seconds=120)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">completion_timeout=datetime.timedelta(seconds=120)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_call_wait=datetime.timedelta(seconds=1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">termination_grace_time=datetime.timedelta(seconds=5)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor_process_logfile=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enabled=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">completion=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">terminate=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/nvidia_resiliency_ext/inprocess/wrap.html#Wrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nvidia_resiliency_ext.inprocess.Wrapper" title="Link to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">nvidia_resiliency_ext.inprocess.</span></span><span class="sig-name descname"><span class="pre">Wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store_factory=&lt;class</span> <span class="pre">'nvidia_resiliency_ext.inprocess.store.TCPStore'&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">store_kwargs=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">initialize=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abort=&lt;nvidia_resiliency_ext.inprocess.abort.AbortTorchDistributed</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">finalize=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">health_check=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank_assignment=&lt;abc.DynamicCompose</span> <span class="pre">object&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor_thread_interval=datetime.timedelta(seconds=1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor_process_interval=datetime.timedelta(seconds=1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heartbeat_interval=datetime.timedelta(seconds=1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_watchdog_interval=datetime.timedelta(seconds=1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">soft_timeout=datetime.timedelta(seconds=60)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hard_timeout=datetime.timedelta(seconds=90)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">heartbeat_timeout=datetime.timedelta(seconds=30)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">barrier_timeout=datetime.timedelta(seconds=120)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">completion_timeout=datetime.timedelta(seconds=120)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">last_call_wait=datetime.timedelta(seconds=1)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">termination_grace_time=datetime.timedelta(seconds=5)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor_process_logfile=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">monitor_process_pidfile=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enabled=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">completion=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">terminate=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/nvidia_resiliency_ext/inprocess/wrap.html#Wrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#nvidia_resiliency_ext.inprocess.Wrapper" title="Link to this definition"></a></dt>
 <dd><p>Python function wrapper that adds restart capabilities to an existing
 Python function implementing distributed PyTorch workload.</p>
 <p>Upon a fault, the wrapped function is restarted across all distributed
@@ -180,38 +207,41 @@ condition is met.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>store_factory</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.13)"><em>type</em></a><em>[</em><em>StoreMixin</em><em>]</em>) – Factory to construct the internal distributed store for
+<li><p><strong>store_factory</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#type" title="(in Python v3.14)"><em>type</em></a><em>[</em><em>StoreMixin</em><em>]</em>) – Factory to construct the internal distributed store for
 communication between ranks.</p></li>
-<li><p><strong>store_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.13)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.13)"><em>Any</em></a><em>] </em><em>| </em><em>None</em>) – Dictionary of keyword arguments to construct the internal
+<li><p><strong>store_kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.14)"><em>dict</em></a><em>[</em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Any" title="(in Python v3.14)"><em>Any</em></a><em>] </em><em>| </em><em>None</em>) – Dictionary of keyword arguments to construct the internal
 store with <code class="docutils literal notranslate"><span class="pre">store_factory(**store_kwargs)</span></code>.</p></li>
 <li><p><strong>initialize</strong> (<a class="reference internal" href="initialize.html#nvidia_resiliency_ext.inprocess.initialize.Initialize" title="nvidia_resiliency_ext.inprocess.initialize.Initialize"><em>Initialize</em></a><em> | </em><em>None</em>) – Rank-local initialize.</p></li>
 <li><p><strong>abort</strong> (<a class="reference internal" href="abort.html#nvidia_resiliency_ext.inprocess.abort.Abort" title="nvidia_resiliency_ext.inprocess.abort.Abort"><em>Abort</em></a><em> | </em><em>None</em>) – Asynchronously aborts execution.</p></li>
 <li><p><strong>finalize</strong> (<a class="reference internal" href="finalize.html#nvidia_resiliency_ext.inprocess.finalize.Finalize" title="nvidia_resiliency_ext.inprocess.finalize.Finalize"><em>Finalize</em></a><em> | </em><em>None</em>) – Rank-local finalize.</p></li>
-<li><p><strong>health_check</strong> (<a class="reference internal" href="health_check.html#nvidia_resiliency_ext.inprocess.health_check.HealthCheck" title="nvidia_resiliency_ext.inprocess.health_check.HealthCheck"><em>HealthCheck</em></a><em> | </em><em>None</em>) – Rank-local health check.</p></li>
+<li><p><strong>health_check</strong> (<a class="reference internal" href="health_check.html#nvidia_resiliency_ext.inprocess.health_check.HealthCheck" title="nvidia_resiliency_ext.inprocess.health_check.HealthCheck"><em>HealthCheck</em></a><em> | </em><em>None</em>) – Rank-local health check executed before restart. This health check is
+automatically enhanced with GPU and NVL health validation to ensure comprehensive
+system health before restart.</p></li>
 <li><p><strong>rank_assignment</strong> (<a class="reference internal" href="rank_assignment.html#nvidia_resiliency_ext.inprocess.rank_assignment.RankAssignment" title="nvidia_resiliency_ext.inprocess.rank_assignment.RankAssignment"><em>RankAssignment</em></a>) – Reassigns ranks, computes the new world size and
 specifies which ranks are calling the wrapped function.</p></li>
-<li><p><strong>rank_filter</strong> (<a class="reference internal" href="rank_filter.html#nvidia_resiliency_ext.inprocess.rank_filter.RankFilter" title="nvidia_resiliency_ext.inprocess.rank_filter.RankFilter"><em>RankFilter</em></a><em> | </em><em>None</em>) – (DEPRECATED) Specifies ranks actively calling the wrapped
-function.</p></li>
-<li><p><strong>monitor_thread_interval</strong> (<a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(in Python v3.13)"><em>timedelta</em></a>) – Monitoring interval for the monitor thread.</p></li>
-<li><p><strong>monitor_process_interval</strong> (<a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(in Python v3.13)"><em>timedelta</em></a>) – Monitoring interval for the monitor process.</p></li>
-<li><p><strong>heartbeat_interval</strong> (<a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(in Python v3.13)"><em>timedelta</em></a>) – Monitoring interval for detecting unresponsive
+<li><p><strong>monitor_thread_interval</strong> (<a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(in Python v3.14)"><em>timedelta</em></a>) – Monitoring interval for the monitor thread.</p></li>
+<li><p><strong>monitor_process_interval</strong> (<a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(in Python v3.14)"><em>timedelta</em></a>) – Monitoring interval for the monitor process.</p></li>
+<li><p><strong>heartbeat_interval</strong> (<a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(in Python v3.14)"><em>timedelta</em></a>) – Monitoring interval for detecting unresponsive
 ranks.</p></li>
-<li><p><strong>progress_watchdog_interval</strong> (<a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(in Python v3.13)"><em>timedelta</em></a>) – Interval for automatic progress watchdog
+<li><p><strong>progress_watchdog_interval</strong> (<a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(in Python v3.14)"><em>timedelta</em></a>) – Interval for automatic progress watchdog
 timestamp updates.</p></li>
-<li><p><strong>soft_timeout</strong> (<a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(in Python v3.13)"><em>timedelta</em></a>) – Soft progress timeout. Timed-out rank executes
+<li><p><strong>soft_timeout</strong> (<a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(in Python v3.14)"><em>timedelta</em></a>) – Soft progress timeout. Timed-out rank executes
 asynchronous abort, and participates in the restart if healthy.</p></li>
-<li><p><strong>hard_timeout</strong> (<a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(in Python v3.13)"><em>timedelta</em></a>) – Hard progress timeout. Timed-out rank is terminated.</p></li>
-<li><p><strong>heartbeat_timeout</strong> (<a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(in Python v3.13)"><em>timedelta</em></a>) – Timeout for a missing rank detection heartbeat.</p></li>
-<li><p><strong>barrier_timeout</strong> (<a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(in Python v3.13)"><em>timedelta</em></a>) – Barrier timeout.</p></li>
-<li><p><strong>completion_timeout</strong> (<a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(in Python v3.13)"><em>timedelta</em></a>) – Completion barrier timeout.</p></li>
-<li><p><strong>last_call_wait</strong> (<a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(in Python v3.13)"><em>timedelta</em></a>) – Time interval for other ranks to report concurrent
+<li><p><strong>hard_timeout</strong> (<a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(in Python v3.14)"><em>timedelta</em></a>) – Hard progress timeout. Timed-out rank is terminated.</p></li>
+<li><p><strong>heartbeat_timeout</strong> (<a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(in Python v3.14)"><em>timedelta</em></a>) – Timeout for a missing rank detection heartbeat.</p></li>
+<li><p><strong>barrier_timeout</strong> (<a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(in Python v3.14)"><em>timedelta</em></a>) – Barrier timeout.</p></li>
+<li><p><strong>completion_timeout</strong> (<a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(in Python v3.14)"><em>timedelta</em></a>) – Completion barrier timeout.</p></li>
+<li><p><strong>last_call_wait</strong> (<a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(in Python v3.14)"><em>timedelta</em></a>) – Time interval for other ranks to report concurrent
 terminal failures.</p></li>
-<li><p><strong>termination_grace_time</strong> (<a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(in Python v3.13)"><em>timedelta</em></a>) – Interval between <code class="docutils literal notranslate"><span class="pre">SIGTERM</span></code> and <code class="docutils literal notranslate"><span class="pre">SIGKILL</span></code>
+<li><p><strong>termination_grace_time</strong> (<a class="reference external" href="https://docs.python.org/3/library/datetime.html#datetime.timedelta" title="(in Python v3.14)"><em>timedelta</em></a>) – Interval between <code class="docutils literal notranslate"><span class="pre">SIGTERM</span></code> and <code class="docutils literal notranslate"><span class="pre">SIGKILL</span></code>
 signals issued by the hard timeout mechanism.</p></li>
-<li><p><strong>monitor_process_logfile</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> | </em><em>None</em>) – Absolute filepath for the monitor process
+<li><p><strong>monitor_process_logfile</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>) – Absolute filepath for the monitor process
 logfile. It may contain “{rank}” placeholder, to be filled with
 initial integer rank id.</p></li>
-<li><p><strong>enabled</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.13)"><em>bool</em></a>) – Enables the wrapper.</p></li>
+<li><p><strong>monitor_process_pidfile</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.14)"><em>str</em></a><em> | </em><em>None</em>) – Absolute filepath for the monitor process
+pidfile. It may contain “{rank}” placeholder, to be filled with
+initial integer rank id.</p></li>
+<li><p><strong>enabled</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.14)"><em>bool</em></a>) – Enables the wrapper.</p></li>
 <li><p><strong>completion</strong> (<em>Completion</em><em> | </em><em>None</em>)</p></li>
 <li><p><strong>terminate</strong> (<em>Terminate</em><em> | </em><em>None</em>)</p></li>
 </ul>
@@ -219,7 +249,7 @@ initial integer rank id.</p></li>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Returns the value of the wrapped function if all ranks successfully
 completed execution.
-Inactive ranks return <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>.</p>
+Inactive ranks return <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code></a>.</p>
 </dd>
 </dl>
 </dd></dl>

@@ -60,6 +60,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../straggler_det/index.html">Straggler Detection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../shared_utils/index.html">Shared Utilities</a></li>
 </ul>
 
         </div>
@@ -181,7 +182,7 @@
 <span class="linenos"> 89</span>        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Rank </span><span class="si">{</span><span class="n">dist</span><span class="o">.</span><span class="n">get_rank</span><span class="p">()</span><span class="si">}</span><span class="s2"> initialized with </span><span class="si">{</span><span class="n">backend</span><span class="si">}</span><span class="s2"> backend.&quot;</span><span class="p">)</span>
 <span class="linenos"> 90</span>
 <span class="linenos"> 91</span>        <span class="c1"># Ensure each process uses a different GPU</span>
-<span class="linenos"> 92</span>        <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">set_device</span><span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">get_rank</span><span class="p">())</span>
+<span class="linenos"> 92</span>        <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">set_device</span><span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">get_node_local_rank</span><span class="p">())</span>
 <span class="linenos"> 93</span>    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
 <span class="linenos"> 94</span>        <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error initializing the distributed backend: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <span class="linenos"> 95</span>        <span class="k">raise</span>
@@ -251,7 +252,7 @@
 <span class="linenos">159</span>
 <span class="linenos">160</span>        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Finalize TASD checkpoint saving.&quot;</span><span class="p">)</span>
 <span class="linenos">161</span>        <span class="n">async_queue</span><span class="o">.</span><span class="n">maybe_finalize_async_calls</span><span class="p">(</span><span class="n">blocking</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">no_dist</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-<span class="linenos">162</span>        <span class="n">async_queue</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>  <span class="c1"># Explicitly close queue (optional)</span>
+<span class="linenos">162</span>        <span class="n">async_queue</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>  <span class="c1"># Explicitly close queue</span>
 <span class="linenos">163</span>
 <span class="linenos">164</span>    <span class="c1"># Synchronize processes to ensure all have completed the saving</span>
 <span class="linenos">165</span>    <span class="n">dist</span><span class="o">.</span><span class="n">barrier</span><span class="p">()</span>

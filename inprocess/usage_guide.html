@@ -55,6 +55,12 @@
 <li class="toctree-l4"><a class="reference internal" href="#requirements-for-the-execution-environment">Requirements for the execution environment</a></li>
 </ul>
 </li>
+<li class="toctree-l3"><a class="reference internal" href="#running-with-slurm">Running with SLURM</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#slurm-configuration-requirements">SLURM Configuration Requirements</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#complete-slurm-launch-command">Complete SLURM Launch Command</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#wrapper-configuration">Wrapper Configuration</a></li>
+</ul>
+</li>
 <li class="toctree-l3"><a class="reference internal" href="#restrictions">Restrictions</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#functionality-overview">Functionality overview</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#implementation-overview">Implementation overview</a></li>
@@ -65,14 +71,15 @@
 <li class="toctree-l4"><a class="reference internal" href="#progress-timeout">Progress timeout</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#finalize">Finalize</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#health-check">Health check</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#automatic-health-checks">Automatic Health Checks</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#monitoring-capabilities">Monitoring capabilities</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#logging">Logging</a></li>
 </ul>
 </li>
 <li class="toctree-l3"><a class="reference internal" href="#restart-latency">Restart latency</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#known-issues">Known issues</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#id5">PyTorch</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#id6">NCCL</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id6">PyTorch</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#id7">NCCL</a></li>
 <li class="toctree-l4"><a class="reference internal" href="#cuda">CUDA</a></li>
 </ul>
 </li>
@@ -85,6 +92,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../checkpointing/async/index.html">Async Checkpointing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../checkpointing/local/index.html">Local Checkpointing</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../straggler_det/index.html">Straggler Detection</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../shared_utils/index.html">Shared Utilities</a></li>
 </ul>
 
         </div>
@@ -135,7 +143,7 @@ issues</span></a> section.</p>
 <li><p>The wrapped function should be designed to support restarts, meaning it
 should carefully manage any external (e.g., global) state and resources,
 avoid using functions that can only be called once per process, such as
-<a class="reference external" href="https://docs.python.org/3/library/multiprocessing.html#multiprocessing.set_start_method" title="(in Python v3.13)"><code class="xref py py-func docutils literal notranslate"><span class="pre">multiprocessing.set_start_method()</span></code></a> or <code class="docutils literal notranslate"><span class="pre">MPI_Init</span></code>, to ensure that
+<a class="reference external" href="https://docs.python.org/3/library/multiprocessing.html#multiprocessing.set_start_method" title="(in Python v3.14)"><code class="xref py py-func docutils literal notranslate"><span class="pre">multiprocessing.set_start_method()</span></code></a> or <code class="docutils literal notranslate"><span class="pre">MPI_Init</span></code>, to ensure that
 the function can be executed multiple times in the same process without
 issues.</p>
 <blockquote>
@@ -161,11 +169,11 @@ terminated ranks will not rejoin the distributed job upon restart.</p></li>
 </ul>
 </div></blockquote>
 </li>
-<li><p>The function does not suppress <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.13)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">BaseException</span></code></a>. If the wrapped
-function catches a <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.13)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">BaseException</span></code></a>, it must re-raise it to ensure it
+<li><p>The function does not suppress <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.14)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">BaseException</span></code></a>. If the wrapped
+function catches a <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.14)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">BaseException</span></code></a>, it must re-raise it to ensure it
 propagates to the outer scope.</p></li>
 <li><p>The function is responsible for initialization of PyTorch distributed backend
-(<a class="reference external" href="https://docs.pytorch.org/docs/stable/distributed.html#torch.distributed.init_process_group" title="(in PyTorch v2.7)"><code class="xref py py-func docutils literal notranslate"><span class="pre">torch.distributed.init_process_group()</span></code></a>); the initialization needs
+(<a class="reference external" href="https://docs.pytorch.org/docs/stable/distributed.html#torch.distributed.init_process_group" title="(in PyTorch v2.9)"><code class="xref py py-func docutils literal notranslate"><span class="pre">torch.distributed.init_process_group()</span></code></a>); the initialization needs
 to read <a class="reference external" href="https://pytorch.org/docs/stable/distributed.html#environment-variable-initialization">standard PyTorch distributed variables</a>
 (<code class="docutils literal notranslate"><span class="pre">RANK</span></code>, <code class="docutils literal notranslate"><span class="pre">WORLD_SIZE</span></code>, <code class="docutils literal notranslate"><span class="pre">MASTER_ADDR</span></code>, <code class="docutils literal notranslate"><span class="pre">MASTER_PORT</span></code> and
 <code class="docutils literal notranslate"><span class="pre">LOCAL_RANK</span></code>) from the environment. Users can use torchrun to override the environment
@@ -173,8 +181,16 @@ variables (–master_addr=127.0.0.1, –master_port=29500, etc.) depending on
 their cluster requirements and also to run the provided examples <code class="docutils literal notranslate"><span class="pre">torchrun</span> <span class="pre">--nproc_per_node=8</span>
 <span class="pre">--nnodes=1</span> <span class="pre">--node_rank=0</span> <span class="pre">basic_example.py</span></code>. For other environment variables when running
 with torchrun, please refer to the <a class="reference external" href="https://github.com/NVIDIA/nvidia-resiliency-ext/blob/main/examples/fault_tolerance/run_inprocess_injob_example.sh">run_inprocess_injob_example.sh</a> example for the recommended
-default values (for example, –monitor-interval=5).</p></li>
-<li><p>it’s heavily recommended for the wrapped function to load the state affected
+default values (for example, –monitor-interval=5).</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Any objects whose lifetime crosses the restart boundary <em>must</em> be process-group independent _or_
+the workload must re-align the object, inside the wrapped function, to the new process groups
+created after the In-process restart.</p></li>
+</ul>
+</div></blockquote>
+</li>
+<li><p>It is heavily recommended for the wrapped function to load the state affected
 by distributed collectives from a checkpoint on every restart (e.g. load
 weights of a model); outputs of distributed collectives are likely to become
 corrupted or invalid if a fault happened while a collective was in-flight and
@@ -189,19 +205,68 @@ timeout longer than the <code class="docutils literal notranslate"><span class="
 <a class="reference internal" href="api/wrap.html#nvidia_resiliency_ext.inprocess.Wrapper" title="nvidia_resiliency_ext.inprocess.Wrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">nvidia_resiliency_ext.inprocess.Wrapper</span></code></a>. If the NCCL watchdog is triggered, it forcibly
 terminates the process, preventing a restart. To adjust the NCCL watchdog
 timeout, use the <code class="docutils literal notranslate"><span class="pre">timeout</span></code> argument when calling
-<a class="reference external" href="https://docs.pytorch.org/docs/stable/distributed.html#torch.distributed.init_process_group" title="(in PyTorch v2.7)"><code class="xref py py-func docutils literal notranslate"><span class="pre">torch.distributed.init_process_group()</span></code></a> with the <code class="docutils literal notranslate"><span class="pre">backend</span></code>
+<a class="reference external" href="https://docs.pytorch.org/docs/stable/distributed.html#torch.distributed.init_process_group" title="(in PyTorch v2.9)"><code class="xref py py-func docutils literal notranslate"><span class="pre">torch.distributed.init_process_group()</span></code></a> with the <code class="docutils literal notranslate"><span class="pre">backend</span></code>
 parameter set to <code class="docutils literal notranslate"><span class="pre">&quot;nccl&quot;</span></code></p></li>
 <li><p>The job scheduler must not terminate the entire job if a faulty rank exits
 early or if the main process is terminated; instead, it should wait until all
 user-launched processes have fully exited before ending the distributed job.</p></li>
+<li><p>When using SLURM, refer to the <a class="reference internal" href="#running-with-slurm"><span class="std std-ref">Running with SLURM</span></a> section
+for specific configuration requirements.</p></li>
 </ul>
+</section>
+</section>
+<section id="running-with-slurm">
+<span id="id1"></span><h2>Running with SLURM<a class="headerlink" href="#running-with-slurm" title="Link to this heading"></a></h2>
+<p>When using SLURM as the job scheduler, specific configuration is required to
+ensure the in-process restart functionality works correctly. SLURM has default
+behaviors that can interfere with the restart mechanism, so proper setup is
+essential.</p>
+<section id="slurm-configuration-requirements">
+<h3>SLURM Configuration Requirements<a class="headerlink" href="#slurm-configuration-requirements" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Use the <code class="docutils literal notranslate"><span class="pre">--kill-on-bad-exit=0</span></code> option with <code class="docutils literal notranslate"><span class="pre">srun</span></code> to prevent SLURM from
+terminating the entire job when some ranks exit on failure. This allows the
+in-process restart mechanism to handle failures and restart the distributed
+job without SLURM interference.</p></li>
+<li><p>The job must be launched using the <cite>wait_daemon.py</cite> utility to ensure proper
+cleanup of monitoring daemon processes. The <span class="xref std std-ref">Monitor Process</span> operates as a separate daemon process that participates in
+the distributed store and hosts the TCPStore for communication between ranks.
+SLURM by default terminates all user processes when the main job process
+finishes, which would immediately terminate the Monitor Process and prevent it
+from properly finalizing the distributed job by waiting on the termination
+barrier. The <cite>wait_daemon.py</cite> utility ensures that the Monitor Process is the
+last process to exit, allowing it to complete its cleanup responsibilities.</p></li>
+</ul>
+</section>
+<section id="complete-slurm-launch-command">
+<h3>Complete SLURM Launch Command<a class="headerlink" href="#complete-slurm-launch-command" title="Link to this heading"></a></h3>
+<p>Use the following command format to launch your job with SLURM:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>srun<span class="w"> </span>--kill-on-bad-exit<span class="o">=</span><span class="m">0</span><span class="w"> </span>&lt;other_srun_options&gt;<span class="w"> </span>bash<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;</span>
+<span class="s2">python -u </span><span class="si">${</span><span class="nv">run_cmd</span><span class="si">}</span>
+<span class="s2">ret=\$?</span>
+<span class="s2">python -m nvidia_resiliency_ext.shared_utils.wait_daemon /tmp/inprocess_monitor\${SLURM_PROCID}.pid</span>
+<span class="s2">exit \$ret&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="wrapper-configuration">
+<h3>Wrapper Configuration<a class="headerlink" href="#wrapper-configuration" title="Link to this heading"></a></h3>
+<p>When creating the <a class="reference internal" href="api/wrap.html#nvidia_resiliency_ext.inprocess.Wrapper" title="nvidia_resiliency_ext.inprocess.Wrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">nvidia_resiliency_ext.inprocess.Wrapper</span></code></a>, the training program
+must specify the <code class="docutils literal notranslate"><span class="pre">monitor_process_pidfile</span></code> parameter to match the path used in
+the wait_daemon command:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">train</span> <span class="o">=</span> <span class="n">inprocess</span><span class="o">.</span><span class="n">Wrapper</span><span class="p">(</span>
+    <span class="n">monitor_process_pidfile</span><span class="o">=</span><span class="s2">&quot;/tmp/inprocess_monitor_</span><span class="si">{rank}</span><span class="s2">.pid&quot;</span><span class="p">,</span>
+    <span class="c1"># ... other parameters ...</span>
+<span class="p">)(</span><span class="n">train</span><span class="p">)</span>
+</pre></div>
+</div>
 </section>
 </section>
 <section id="restrictions">
 <h2>Restrictions<a class="headerlink" href="#restrictions" title="Link to this heading"></a></h2>
 <ul>
 <li><p>node failure on rank 0 causes termination of the entire job; by default, rank
-0 hosts internal <a class="reference external" href="https://docs.pytorch.org/docs/stable/distributed.html#torch.distributed.TCPStore" title="(in PyTorch v2.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">torch.distributed.TCPStore</span></code></a> to allow
+0 hosts internal <a class="reference external" href="https://docs.pytorch.org/docs/stable/distributed.html#torch.distributed.TCPStore" title="(in PyTorch v2.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">torch.distributed.TCPStore</span></code></a> to allow
 communication between ranks, users may specify a different implementation of
 a distributed store by subclassing from
 <code class="xref py py-class docutils literal notranslate"><span class="pre">nvidia_resiliency_ext.inprocess.store.StoreMixin</span></code> and passing the subclass as
@@ -237,7 +302,6 @@ purposes only and may omit certain implementation details.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">distributed_store</span> <span class="o">=</span> <span class="n">store_factory</span><span class="p">(</span><span class="o">**</span><span class="n">store_kwargs</span><span class="p">)</span>
 <span class="n">initial_barrier</span><span class="p">()</span>
 <span class="n">rank_assignment</span><span class="p">()</span>
-<span class="n">rank_filter</span><span class="p">()</span>  <span class="c1"># deprecated</span>
 
 <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
     <span class="n">initialize</span><span class="p">()</span>
@@ -254,7 +318,6 @@ purposes only and may omit certain implementation details.</p>
         <span class="n">health_check</span><span class="p">()</span>
         <span class="n">iteration_barrier</span><span class="p">()</span>
         <span class="n">rank_assignment</span><span class="p">()</span>
-        <span class="n">rank_filter</span><span class="p">()</span>  <span class="c1"># deprecated</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">break</span>
 
@@ -352,8 +415,8 @@ healthy ranks would be inactive and serve as a reserve.</p>
 <a class="reference internal" href="api/initialize.html#nvidia_resiliency_ext.inprocess.initialize.Initialize" title="nvidia_resiliency_ext.inprocess.initialize.Initialize"><code class="xref py py-class docutils literal notranslate"><span class="pre">nvidia_resiliency_ext.inprocess.initialize.Initialize</span></code></a> class, which is executed at the
 start of every restart iteration, including the first one.
 <code class="xref py py-class docutils literal notranslate"><span class="pre">Initialize</span></code> can raise exceptions (e.g., if specific preconditions
-are not met). Raising a standard Python <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.13)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">Exception</span></code></a> triggers another
-restart of the wrapped function, while raising a <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.13)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">BaseException</span></code></a>
+are not met). Raising a standard Python <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#Exception" title="(in Python v3.14)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">Exception</span></code></a> triggers another
+restart of the wrapped function, while raising a <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.14)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">BaseException</span></code></a>
 terminates the <code class="xref py py-class docutils literal notranslate"><span class="pre">Wrapper</span></code>. The included
 <a class="reference internal" href="api/initialize.html#nvidia_resiliency_ext.inprocess.initialize.RetryController" title="nvidia_resiliency_ext.inprocess.initialize.RetryController"><code class="xref py py-class docutils literal notranslate"><span class="pre">nvidia_resiliency_ext.inprocess.initialize.RetryController</span></code></a> can be used to limit the
 number of restart attempts or to halt execution if the number of healthy
@@ -361,7 +424,10 @@ workers drops below a specified threshold.</p>
 <p>Multiple initializers could be composed with <code class="xref py py-class docutils literal notranslate"><span class="pre">nvidia_resiliency_ext.inprocess.Compose</span></code>.
 The composition order follows mathematical composition. Therefore, the last listed function is called first.
 Consequently, when using nested restarters, the <code class="xref py py-class docutils literal notranslate"><span class="pre">nvidia_resiliency_ext.inprocess.nested_restarter.NestedRestarterHandlingCompleted</span></code>
-should be listed first, as handling a restart is not complete until the end of the <cite>Initialize</cite>.</p>
+should be carefully placed as this callback indicates completion of the restart.
+Subsequent callbacks (e.g., those listed before the nested restarter callback) logically take placed
+at the _beginning_ of the next restart iteration.  For example, <a class="reference internal" href="api/rank_assignment.html#nvidia_resiliency_ext.inprocess.rank_assignment.RankAssignment" title="nvidia_resiliency_ext.inprocess.rank_assignment.RankAssignment"><code class="xref py py-class docutils literal notranslate"><span class="pre">nvidia_resiliency_ext.inprocess.rank_assignment.RankAssignment</span></code></a>
+is logically part of the next restart iteration and should be called after the nested restarter callback.</p>
 </section>
 <section id="wrapped-function-termination-mechanism">
 <h3>Wrapped function termination mechanism<a class="headerlink" href="#wrapped-function-termination-mechanism" title="Link to this heading"></a></h3>
@@ -384,7 +450,7 @@ handles the restart process</p></li>
 and gives the wrapped function an opportunity to properly clean up resources by
 calling all encountered exception handlers, context managers’ <code class="docutils literal notranslate"><span class="pre">__exit__</span></code>
 methods etc. The restart exception raised by the <code class="xref py py-class docutils literal notranslate"><span class="pre">Wrapper</span></code> is a
-direct subclass of Python <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.13)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">BaseException</span></code></a> and it is required that the
+direct subclass of Python <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.14)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">BaseException</span></code></a> and it is required that the
 wrapped function propagates this exception to the outer function scope.</p>
 <p>The termination procedure runs in a separate Python thread. In some cases, the
 main thread - unblocked by the destruction of the distributed process group -
@@ -416,7 +482,7 @@ ranks, and triggers an attempt to restart the wrapped function on all healthy
 ranks.</p>
 </section>
 <section id="hard-timeout">
-<span id="id1"></span><h4>Hard timeout<a class="headerlink" href="#hard-timeout" title="Link to this heading"></a></h4>
+<span id="id2"></span><h4>Hard timeout<a class="headerlink" href="#hard-timeout" title="Link to this heading"></a></h4>
 <p>The hard timeout mechanism forcefully terminates the main Python interpreter
 process by sending a sequence of signals to ensure proper shutdown.</p>
 <p>Initially, the <code class="xref py py-class docutils literal notranslate"><span class="pre">Wrapper</span></code> sends the signals (<code class="docutils literal notranslate"><span class="pre">SIGCONT</span></code>, <code class="docutils literal notranslate"><span class="pre">SIGTERM</span></code>)
@@ -436,7 +502,7 @@ where the process hangs. This minimizes restart latency while ensuring the
 process is terminated promptly.</p>
 </section>
 <section id="reporting-progress">
-<span id="id2"></span><h4>Reporting progress<a class="headerlink" href="#reporting-progress" title="Link to this heading"></a></h4>
+<span id="id3"></span><h4>Reporting progress<a class="headerlink" href="#reporting-progress" title="Link to this heading"></a></h4>
 <p>Timeout events are triggered when the wrapped function didn’t report progress
 in the specified timeout interval.</p>
 <p>There are two methods to record progress:</p>
@@ -468,6 +534,52 @@ the <code class="xref py py-meth docutils literal notranslate"><span class="pre"
 </ul>
 <p>Timeout event is triggered if either of the active progress monitoring methods
 didn’t record a heartbeat in the specified time interval.</p>
+</section>
+<section id="disabling-hang-protection">
+<h4>Disabling hang protection<a class="headerlink" href="#disabling-hang-protection" title="Link to this heading"></a></h4>
+<p>In some cases, certain operations within the wrapped function may legitimately
+take longer than the configured <code class="docutils literal notranslate"><span class="pre">soft_timeout</span></code> or <code class="docutils literal notranslate"><span class="pre">hard_timeout</span></code> intervals.
+For such operations, the <code class="xref py py-class docutils literal notranslate"><span class="pre">Wrapper</span></code> provides a
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">inprocess.CallWrapper.disable_hang_protection()</span></code> context manager that
+temporarily disables timeout-based hang detection.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The <code class="xref py py-meth docutils literal notranslate"><span class="pre">inprocess.CallWrapper.disable_hang_protection()</span></code> context manager
+disables critical safety mechanisms designed to protect against hangs and
+deadlocks. Use with extreme caution and only for operations you are confident
+will complete.</p>
+</div>
+<p>The context manager is typically used for operations such as:</p>
+<ul class="simple">
+<li><p>Large data loading operations that may take unpredictable amounts of time</p></li>
+<li><p>Complex initialization routines</p></li>
+<li><p>Other legitimate long-running operations that should not be interrupted</p></li>
+</ul>
+<p>When the context manager exits (either normally or due to an exception), hang
+protection is automatically re-enabled.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">my_training_function</span><span class="p">(</span><span class="n">call_wrapper</span><span class="p">:</span> <span class="n">CallWrapper</span><span class="p">):</span>
+    <span class="c1"># Normal operations are subject to hang protection</span>
+    <span class="n">train_step</span><span class="p">()</span>
+
+    <span class="c1"># Disable hang protection for long-running data loading</span>
+    <span class="k">with</span> <span class="n">call_wrapper</span><span class="o">.</span><span class="n">disable_hang_protection</span><span class="p">():</span>
+        <span class="n">load_large_dataset</span><span class="p">()</span>  <span class="c1"># This won&#39;t trigger timeout restarts</span>
+
+    <span class="c1"># Hang protection is automatically re-enabled</span>
+    <span class="n">train_step</span><span class="p">()</span>  <span class="c1"># This will trigger hang detection if it hangs</span>
+</pre></div>
+</div>
+<p><strong>Important considerations:</strong></p>
+<ul class="simple">
+<li><p><strong>Exception handling</strong>: The context manager only disables timeout-based
+restarts. Exceptions raised within the disabled region will still trigger
+restarts as expected.</p></li>
+<li><p><strong>Scope minimization</strong>: Use the context manager for the smallest possible
+scope. Avoid wrapping entire training loops or large code sections.</p></li>
+<li><p><strong>Testing</strong>: Thoroughly test operations within the disabled context to ensure
+they complete reliably, as the normal hang detection safety net is temporarily
+removed.</p></li>
+</ul>
 </section>
 </section>
 <section id="finalize">
@@ -504,14 +616,32 @@ then reraised by the <code class="xref py py-class docutils literal notranslate"
 main Python interpreter process on the local rank.</p>
 <p>Multiple health checks could be composed with <code class="xref py py-class docutils literal notranslate"><span class="pre">nvidia_resiliency_ext.inprocess.Compose</span></code>.</p>
 </section>
+<section id="automatic-health-checks">
+<h3>Automatic Health Checks<a class="headerlink" href="#automatic-health-checks" title="Link to this heading"></a></h3>
+<p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">Wrapper</span></code> automatically includes comprehensive health monitoring when the <code class="docutils literal notranslate"><span class="pre">LOCAL_RANK</span></code>
+environment variable is available. These health checks are executed in sequence during restart to ensure
+the system is in a healthy state before attempting to restart the workload.</p>
+<p><strong>GPU Health Check</strong>: Validates GPU device health and recovery actions using <code class="xref py py-class docutils literal notranslate"><span class="pre">ChainedGPUHealthCheck</span></code>.</p>
+<p><strong>NVL Health Check</strong>: Monitors NVLink connectivity and link health using <code class="xref py py-class docutils literal notranslate"><span class="pre">ChainedNVLHealthCheck</span></code>.</p>
+<p><strong>NIC Health Check</strong>: Monitors network interface card connectivity and link down events using <code class="xref py py-class docutils literal notranslate"><span class="pre">ChainedNicHealthCheck</span></code>.
+This is particularly important for distributed workloads where network connectivity is critical.</p>
+<p>The automatic health checks are configured with the same <code class="docutils literal notranslate"><span class="pre">device_index</span></code> as the current GPU rank (from <code class="docutils literal notranslate"><span class="pre">LOCAL_RANK</span></code>),
+ensuring that each GPU monitors its associated network interfaces. No additional configuration is required
+for basic health monitoring - the wrapper automatically handles health check composition and execution.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The NIC health check automatically establishes baseline link down counter values during initialization,
+ensuring accurate delta detection from the first health check execution.</p>
+</div>
+</section>
 <section id="monitoring-capabilities">
 <h3>Monitoring capabilities<a class="headerlink" href="#monitoring-capabilities" title="Link to this heading"></a></h3>
 <p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">Wrapper</span></code> provides several monitoring mechanisms to track the
 workload’s progress and enable rapid restart capabilities in the event of a
 fault.</p>
 <section id="monitor-thread">
-<span id="id3"></span><h4>Monitor Thread<a class="headerlink" href="#monitor-thread" title="Link to this heading"></a></h4>
-<p>The Monitor Thread runs as a separate <a class="reference external" href="https://docs.python.org/3/library/threading.html#threading.Thread" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">threading.Thread</span></code></a> and is
+<span id="id4"></span><h4>Monitor Thread<a class="headerlink" href="#monitor-thread" title="Link to this heading"></a></h4>
+<p>The Monitor Thread runs as a separate <a class="reference external" href="https://docs.python.org/3/library/threading.html#threading.Thread" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">threading.Thread</span></code></a> and is
 tasked with periodically checking the distributed store for any faults reported
 by other distributed ranks. It also ensures that the local rank is
 <a class="reference internal" href="#reporting-progress"><span class="std std-ref">reporting progress</span></a>. If a fault or a lack of
@@ -520,7 +650,7 @@ asynchronous Python exception within the wrapped function.</p>
 <p>The execution interval of the monitoring loop is governed by the
 <code class="docutils literal notranslate"><span class="pre">monitor_thread_interval</span></code> parameter of the <code class="xref py py-class docutils literal notranslate"><span class="pre">Wrapper</span></code>. During each
 loop iteration, the thread queries the distributed store by invoking
-<a class="reference external" href="https://docs.pytorch.org/docs/stable/distributed.html#torch.distributed.Store.get" title="(in PyTorch v2.7)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">torch.distributed.Store.get()</span></code></a>. For workloads with a large number of
+<a class="reference external" href="https://docs.pytorch.org/docs/stable/distributed.html#torch.distributed.Store.get" title="(in PyTorch v2.9)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">torch.distributed.Store.get()</span></code></a>. For workloads with a large number of
 distributed workers, it may be necessary to increase the
 <code class="docutils literal notranslate"><span class="pre">monitor_thread_interval</span></code> to avoid creating a communication bottleneck in the
 distributed store caused by concurrent queries from multiple workers.</p>
@@ -546,7 +676,7 @@ distributed workers to avoid creating a communication bottleneck.</p>
 </section>
 <section id="progress-watchdog">
 <h4>Progress Watchdog<a class="headerlink" href="#progress-watchdog" title="Link to this heading"></a></h4>
-<p>The Progress Watchdog runs as a separate <a class="reference external" href="https://docs.python.org/3/library/threading.html#threading.Thread" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">threading.Thread</span></code></a> and is
+<p>The Progress Watchdog runs as a separate <a class="reference external" href="https://docs.python.org/3/library/threading.html#threading.Thread" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">threading.Thread</span></code></a> and is
 responsible for issuing automatic heartbeats to check if the main thread of the
 Python interpreter keeps executing new bytecode instructions and receiving,
 optional, manual heartbeats from the workload to track its progress. Refer to
@@ -563,13 +693,13 @@ scaled with the number of distributed workers.</p>
 <p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">Wrapper</span></code> leverages the Python logging module to output messages.
 It does not adhere to the conventional methods of fully integrating with an
 application’s root logger. Instead, logging from <code class="xref py py-class docutils literal notranslate"><span class="pre">Wrapper</span></code> within the
-main process is managed through a <a class="reference external" href="https://docs.python.org/3/library/logging.handlers.html#logging.StreamHandler" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">logging.StreamHandler</span></code></a>, which is
+main process is managed through a <a class="reference external" href="https://docs.python.org/3/library/logging.handlers.html#logging.StreamHandler" title="(in Python v3.14)"><code class="xref py py-class docutils literal notranslate"><span class="pre">logging.StreamHandler</span></code></a>, which is
 defined by the first ancestor in the logger hierarchy. Notably, the logging in
 <code class="xref py py-class docutils literal notranslate"><span class="pre">Wrapper</span></code> is configured to not store logs in files, and to not
 <a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.Logger.propagate">propagate</a>
 logging messages to the ancestor loggers’ handlers.</p>
-<p>Logging with <a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.DEBUG" title="(in Python v3.13)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logging.DEBUG</span></code></a> level shows the location where the wrapped
-function suppressed the <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.13)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">BaseException</span></code></a> raised asynchronously by the
+<p>Logging with <a class="reference external" href="https://docs.python.org/3/library/logging.html#logging.DEBUG" title="(in Python v3.14)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">logging.DEBUG</span></code></a> level shows the location where the wrapped
+function suppressed the <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#BaseException" title="(in Python v3.14)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">BaseException</span></code></a> raised asynchronously by the
 <code class="xref py py-class docutils literal notranslate"><span class="pre">Wrapper</span></code>. The restart logic requires that BaseExceptions are
 propagated from the wrapped function to the outer scope. This feature helps to
 find locations where this assumption is not met, and the restart flow is
@@ -648,9 +778,9 @@ all pending CUDA kernels assumes that the training loop performs
 synchronization with the GPU at least once per training iteration.</p>
 </section>
 <section id="known-issues">
-<span id="id4"></span><h2>Known issues<a class="headerlink" href="#known-issues" title="Link to this heading"></a></h2>
-<section id="id5">
-<h3>PyTorch<a class="headerlink" href="#id5" title="Link to this heading"></a></h3>
+<span id="id5"></span><h2>Known issues<a class="headerlink" href="#known-issues" title="Link to this heading"></a></h2>
+<section id="id6">
+<h3>PyTorch<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
 <ol class="arabic simple">
 <li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">torch.distributed.ProcessGroupGloo</span></code> doesn’t offer <code class="docutils literal notranslate"><span class="pre">_shutdown()</span></code>
 method to terminate pending Gloo collectives (<a class="reference external" href="https://github.com/pytorch/pytorch/issues/130345">pytorch/#130345</a>); if a rank
@@ -659,7 +789,7 @@ remaining ranks would wait till <code class="xref py py-class docutils literal n
 exceeded; a workaround is to specify a short timeout for the <code class="docutils literal notranslate"><span class="pre">gloo</span></code>
 backend to enable faster restarts.</p></li>
 <li><p>The <a class="reference internal" href="api/wrap.html#nvidia_resiliency_ext.inprocess.Wrapper" title="nvidia_resiliency_ext.inprocess.Wrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">nvidia_resiliency_ext.inprocess.Wrapper</span></code></a> class uses
-<a class="reference external" href="https://docs.pytorch.org/docs/stable/distributed.html#torch.distributed.Store.wait" title="(in PyTorch v2.7)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">torch.distributed.Store.wait()</span></code></a> to detect events in the distributed
+<a class="reference external" href="https://docs.pytorch.org/docs/stable/distributed.html#torch.distributed.Store.wait" title="(in PyTorch v2.9)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">torch.distributed.Store.wait()</span></code></a> to detect events in the distributed
 key-value store within its monitoring loops. Because these loops often
 advance to the next iteration after an expected timeout, PyTorch emits a
 warning every time <code class="xref py py-meth docutils literal notranslate"><span class="pre">wait()</span></code> times out, cluttering the output. To
@@ -677,17 +807,17 @@ from restarting the wrapper function. A workaround is to set
 <code class="docutils literal notranslate"><span class="pre">TORCH_NCCL_RETHROW_CUDA_ERRORS</span></code> environment variable to <code class="docutils literal notranslate"><span class="pre">0</span></code>, to avoid
 rethrowing CUDA and NCCL errors in PyTorch NCCL Watchdog.</p></li>
 <li><p>PyTorch pairwise distributed process groups for P2P communication using
-<a class="reference external" href="https://docs.pytorch.org/docs/stable/distributed.html#torch.distributed.send" title="(in PyTorch v2.7)"><code class="xref py py-func docutils literal notranslate"><span class="pre">torch.distributed.send()</span></code></a>, <a class="reference external" href="https://docs.pytorch.org/docs/stable/distributed.html#torch.distributed.recv" title="(in PyTorch v2.7)"><code class="xref py py-func docutils literal notranslate"><span class="pre">torch.distributed.recv()</span></code></a> (and
+<a class="reference external" href="https://docs.pytorch.org/docs/stable/distributed.html#torch.distributed.send" title="(in PyTorch v2.9)"><code class="xref py py-func docutils literal notranslate"><span class="pre">torch.distributed.send()</span></code></a>, <a class="reference external" href="https://docs.pytorch.org/docs/stable/distributed.html#torch.distributed.recv" title="(in PyTorch v2.9)"><code class="xref py py-func docutils literal notranslate"><span class="pre">torch.distributed.recv()</span></code></a> (and
 similar functions) need to be created and initialized explicitly at the
-Python level with <a class="reference external" href="https://docs.pytorch.org/docs/stable/distributed.html#torch.distributed.new_group" title="(in PyTorch v2.7)"><code class="xref py py-func docutils literal notranslate"><span class="pre">torch.distributed.new_group()</span></code></a>. Aborting PyTorch
+Python level with <a class="reference external" href="https://docs.pytorch.org/docs/stable/distributed.html#torch.distributed.new_group" title="(in PyTorch v2.9)"><code class="xref py py-func docutils literal notranslate"><span class="pre">torch.distributed.new_group()</span></code></a>. Aborting PyTorch
 NCCL backend with implicitly created P2P communicators may lead to hangs if
 PyTorch doesn’t contain the fix implemented in <a class="reference external" href="https://github.com/pytorch/pytorch/pull/150690">pytorch/#150690</a>.</p></li>
 <li><p>PyTorch may raise segmentation fault if distributed backend is aborted while
 the first iteration of a backward pass is in progress (<a class="reference external" href="https://github.com/pytorch/pytorch/issues/149418">pytorch/#149418</a>).</p></li>
 </ol>
 </section>
-<section id="id6">
-<h3>NCCL<a class="headerlink" href="#id6" title="Link to this heading"></a></h3>
+<section id="id7">
+<h3>NCCL<a class="headerlink" href="#id7" title="Link to this heading"></a></h3>
 <ol class="arabic simple">
 <li><p>Support for NVLink SHARP (NVLS) in NCCL must be disabled by setting the
 <code class="docutils literal notranslate"><span class="pre">NCCL_NVLS_ENABLE</span></code> environment variable to <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p></li>
