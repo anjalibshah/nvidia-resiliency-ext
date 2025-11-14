@@ -2,6 +2,51 @@
 
 NVIDIA Resiliency Extension is a Python package for framework developers and users to implement fault-tolerant features. It improves effective training time by minimizing downtime due to failures and interruptions.
 
+## NVIDIA Resiliency Extension v0.5.0
+
+### Highlights
+
+- In-job restarts 
+    - PRs ([185](https://github.com/NVIDIA/nvidia-resiliency-ext/pull/185), [190](https://github.com/NVIDIA/nvidia-resiliency-ext/pull/190), [201](https://github.com/NVIDIA/nvidia-resiliency-ext/pull/201)) improve the scalability, profiling, and performance of in-job restarts through improvements to the rendezvous operation  
+    - Key scaling and fault-tolerance improvements:
+         - **New barrier-based rendezvous operation** introduces a substantial redesign that addresses several limitations of the previous dynamic rendezvous implementation. This provides more predictable, stable, and scalable in-job behavior
+    - Faster termination path:
+        - The worker termination timeout (--workers-stop-timeout) has been reduced from 30 seconds to 15 seconds, improving failure recovery latency and overall job responsiveness
+    - New Flag for Infra-Aligned Rank Assignment:
+        - A new flag, --ft-use-infra-group-rank, allows in-job scaling to follow the infrastructure scheduler’s rank assignment, preserving topology-aware placement decisions
+    - Migration Guidance:
+        - While the previous dynamic rendezvous-based implementation (v1) remains supported, users are strongly encouraged to adopt barrier-based rendezvous (v2) for improved reliability, stability, and performance 
+
+- Enhanced GPU and NVLink health checks
+    - PR [145](https://github.com/NVIDIA/nvidia-resiliency-ext/pull/145) introduces several improvements to health check module including
+        - Refactored `GPUHealthCheck` to support device-specific monitoring
+        - New `NVLHealthCheck` class for NVLink health validation
+        - Automatic health check chaining in `Wrapper` class `ChainedGPUHealthCheck` and `ChainedNVLHealthCheck` for in-process use
+        - Single GPU health check API for individual device validation and updated trace collector to use new GPU health check API 
+
+- Checkpointing 
+    - PRs ([108](https://github.com/NVIDIA/nvidia-resiliency-ext/pull/108), [138](https://github.com/NVIDIA/nvidia-resiliency-ext/pull/138), [154](https://github.com/NVIDIA/nvidia-resiliency-ext/pull/154), [169](https://github.com/NVIDIA/nvidia-resiliency-ext/pull/169), [170](https://github.com/NVIDIA/nvidia-resiliency-ext/pull/170), [193](https://github.com/NVIDIA/nvidia-resiliency-ext/pull/193), [197](https://github.com/NVIDIA/nvidia-resiliency-ext/pull/197), [199](https://github.com/NVIDIA/nvidia-resiliency-ext/pull/199)) improve the stability of checkpointing by deprecating the use of fork in asynchronous checkpointing, simplifying error propagation and shutdown cleanup logic
+        - Introduced the option to use **Multithread File IO Instead of Multiprocess** to simplify error propagation logic, improve shutdown cleanup and enhance overall stability
+        - Made persistent async checkpoint worker default (except for local checkpointing) and fixed cross-call state pollution
+        - Added ability to abort async checkpoint process 
+
+- Fault attribution (new module introduced in v0.5) 
+    - PR [141](https://github.com/NVIDIA/nvidia-resiliency-ext/pull/141) introduces the base attribution class which can be used to define any attribution module. This provides asynchronous combining multiple modules directly.
+    - PR [172](https://github.com/NVIDIA/nvidia-resiliency-ext/pull/172) improves error attribution by dumping NCCL traces from PyTorch for collective analysis on hang or watchdog timeout 
+        - It is an experimental module to identify ranks interrupting workload progress by analyzing Flight Recorder traces. It detects GPU errors, host issues, and GIL locks
+        - PyT’s watchdog is currently configured to include the training process’s stack trace when generating Flight Recorder traces. However, this can lead to a deadlock if the trainer fails inside a routine that performs collectives while holding the GIL, since capturing the stack trace requires reacquiring the GIL. A new environment variable, TORCH_INCLUDE_STACK_TRACE=False (Default: True), has been added to PyTorch main to avoid this issue. This change will be included in the NGC PyT 25.11 container. 
+
+### Known Issues & Limitations 
+
+- Spare-Node Support
+    - Spare nodes are not supported by either dynamic rendezvous or barrier-based rendezvous in the current release.
+    - The earlier dynamic rendezvous technically supported spare nodes, but only when infra group rank assignment was not used. That mode isn't viable in real deployments because bypassing the infrastructure topology-aware rank assignment leads to degraded performance and inconsistent scaling behavior. Because of this, spare-node support isn't available in this release.
+    - With barrier-based rendezvous, we've aligned fully with infra-assigned ranks to ensure correctness and performance. Spare-node support for barrier-based rendezvous is planned for a future update. 
+- CUDA 12 and Ubuntu 22.04 users are advised to build from source, since PyPI wheel for v0.5 defaults to CUDA 13  
+- In-process restart requires NCCL < v2.28.3 and >= 2.28.9 due to a segmentation fault issue 
+- In-job restart scalability improvements require minimum PyTorch v2.8.0 and higher 
+
+
 ## NVIDIA Resiliency Extension v0.4.1
 
 ### Highlights
